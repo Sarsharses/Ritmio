@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet} from "react-native";
+import {StyleSheet, Text, View} from "react-native";
 
 type Props = {
     habits: string[];
 };
 
-export default function GridHeader({ habits }: Props) {
+export default function GridHeader({habits}: Props) {
     return (
         <View style={styles.headerRow}>
             <Text style={styles.cornerCell}>Day ↓</Text>
