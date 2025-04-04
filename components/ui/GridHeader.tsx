@@ -10,7 +10,9 @@ export default function GridHeader({habits}: Props) {
         <View style={styles.headerRow}>
             <Text style={styles.cornerCell}>Day ↓</Text>
             {habits.map((habit, i) => (
-                <Text key={i} style={styles.headerCell}>{habit}</Text>
+                <View key={i} style={styles.rotatedHeaderCell}>
+                    <Text style={styles.rotatedText}>{habit}</Text>
+                </View>
             ))}
         </View>
     );
@@ -19,18 +21,40 @@ export default function GridHeader({habits}: Props) {
 const styles = StyleSheet.create({
     headerRow: {
         flexDirection: 'row',
-        marginBottom: 10,
-        alignItems: 'center',
-    },
-    headerCell: {
-        flex: 1,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        fontSize: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: '#444',
+        borderTopWidth: 1,
+        borderTopColor: '#333',
+        height: 125,
     },
     cornerCell: {
+        height: '100%',
         width: 60,
         fontWeight: 'bold',
-        fontSize: 14,
-    }
+        fontSize: 13,
+        color: '#ccc',
+        borderLeftWidth: 1,
+        borderLeftColor: '#333',
+        borderRightWidth: 1,
+        borderRightColor: '#333',
+        textAlign: 'center',
+        textAlignVertical: 'bottom',
+        justifyContent: 'flex-end',
+        paddingBottom: 6,
+    },
+    rotatedHeaderCell: {
+        height: '100%',
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRightWidth: 1,
+        borderRightColor: '#333',
+    },
+    rotatedText: {
+        color: '#ccc',
+        fontSize: 12,
+        transform: [{ rotate: '-90deg' }],
+        width: 80,
+        textAlign: 'left',
+    },
 });

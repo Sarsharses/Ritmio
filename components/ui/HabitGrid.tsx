@@ -81,18 +81,25 @@ export default function HabitGrid() {
 
 const styles = StyleSheet.create({
     container: {
-        paddingHorizontal: 10,
-        paddingTop: 50,
-        backgroundColor: '#fff',
         flex: 1,
+        backgroundColor: '#1e1e1e',
+        paddingTop: 50,
+        paddingHorizontal: 10,
     },
     row: {
         flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#333',
     },
     dayLabel: {
         width: 60,
         fontSize: 12,
+        color: '#aaa',
+        borderLeftWidth: 1,
+        borderLeftColor: '#333',
+        borderRightWidth: 2,
+        borderRightColor: '#333',
+        padding: 6,
+        textAlign: 'center',
     },
 });
