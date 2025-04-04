@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export async function saveGridState(key: string, data: boolean[][]) {
+export async function saveGridState(key: string, data: { [date: string]: boolean[] }) {
     try {
         const json = JSON.stringify(data);
         console.log('Saving grid JSON:', json);
@@ -11,9 +11,9 @@ export async function saveGridState(key: string, data: boolean[][]) {
     }
 }
 
-export async function loadGridState(key: string): Promise<boolean[][] | null> {
+export async function loadGridState(key: string): Promise<{ [date: string]: boolean[] } | null> {
     try {
-        console.log('📦 Loading grid state...');
+        console.log('Loading grid state...');
         const json = await AsyncStorage.getItem(key);
         if (!json) {
             console.log('No grid data found');
@@ -22,8 +22,11 @@ export async function loadGridState(key: string): Promise<boolean[][] | null> {
 
         const parsed = JSON.parse(json);
         if (
-            Array.isArray(parsed) &&
-            parsed.every(row => Array.isArray(row) && row.every(cell => typeof cell === 'boolean'))
+            typeof parsed === 'object' &&
+            !Array.isArray(parsed) &&
+            Object.values(parsed).every(
+                row => Array.isArray(row) && row.every(cell => typeof cell === 'boolean')
+            )
         ) {
             console.log('Loaded grid from storage.');
             return parsed;
