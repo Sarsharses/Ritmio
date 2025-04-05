@@ -60,5 +60,8 @@ jobs:
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           files: ritmio-${{ github.ref_name }}.apk
+          body: |
+            Built from tag ${{ github.ref_name }}
+            See the full changelog at https://github.com/your-org/ritmio/compare/v0.1.1...v0.1.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
