@@ -31,41 +31,46 @@ jobs:
         run: npm install -g eas-cli
 
       - name: 🚀 Trigger EAS Build (Android)
-        run: eas build --platform android --profile production --non-interactive
+        run: |
+          BUILD_INFO=$(eas build --platform android --profile production --non-interactive --json)
+          BUILD_ID=$(echo "$BUILD_INFO" | jq -r '.builds[0].id')
+          echo "Triggered build ID: $BUILD_ID"
+          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
         env:
           EAS_ACCESS_TOKEN: ${{ secrets.EAS_ACCESS_TOKEN }}
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: 🧠 Wait for latest APK and fetch URL
+      - name: ⏳ Wait for APK and fetch download URL
         id: fetch-build
         run: |
-          echo "⏳ Waiting for Android build to finish..."
-          
+          echo "⏳ Waiting for Expo build to complete..."
+          BUILD_ID=${{ steps.trigger-build.outputs.build_id }}
+
           for i in {1..30}; do
             BUILD_INFO=$(curl -s -H "Authorization: Bearer $EAS_ACCESS_TOKEN" \
               -X POST https://api.expo.dev/graphql \
               -H "Content-Type: application/json" \
-              --data '{"query":"{ builds(limit: 1, platform: ANDROID) { id, status, artifacts { buildUrl } } }"}')
-          
-            BUILD_URL=$(echo "$BUILD_INFO" | jq -r '.data.builds[0].artifacts.buildUrl')
-            BUILD_STATUS=$(echo "$BUILD_INFO" | jq -r '.data.builds[0].status')
-          
+              --data "{\"query\":\"{ build(id: \\\"$BUILD_ID\\\") { status artifacts { buildUrl } } }\"}")
+
+            BUILD_URL=$(echo "$BUILD_INFO" | jq -r '.data.build.artifacts.buildUrl')
+            BUILD_STATUS=$(echo "$BUILD_INFO" | jq -r '.data.build.status')
+
             echo "Attempt $i: status=$BUILD_STATUS, url=${BUILD_URL:-not ready}"
-          
+
             if [[ "$BUILD_URL" != "null" && "$BUILD_URL" != "" ]]; then
               echo "✅ APK is ready: $BUILD_URL"
               echo "APK_URL=$BUILD_URL" >> "$GITHUB_OUTPUT"
               exit 0
             fi
-          
+
             if [[ "$BUILD_STATUS" == "errored" ]]; then
               echo "❌ Build failed on Expo backend."
               exit 1
             fi
-          
+
             sleep 10
           done
-          
+
           echo "❌ Timeout: APK URL not available after waiting."
           exit 1
         env:
