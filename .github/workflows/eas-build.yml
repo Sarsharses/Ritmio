@@ -21,6 +21,9 @@ jobs:
       - name: 📦 Install dependencies
         run: npm install
 
+      - name: 📦 Install eas-cli
+        run: npm install -g eas-cli
+
       - name: 🚀 Trigger EAS Build (Android)
         run: eas build --platform android --profile preview --non-interactive
         env:

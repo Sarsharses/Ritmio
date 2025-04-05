@@ -88,7 +88,7 @@ export default function HabitGrid() {
     return (
         <View style={styles.container}>
             <Text style={styles.versionText}>
-                Ritmio v:{Constants.expoConfig?.version}
+                Ritmio v{Constants.expoConfig?.version}
             </Text>
             <GridHeader habits={habits} />
             <ScrollView>
