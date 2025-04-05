@@ -2,19 +2,21 @@
   "expo": {
     "name": "Ritmio",
     "slug": "Ritmio",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "buildNumber": "0.1.0"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
+        "versionCode": 1
       }
     },
     "web": {
@@ -36,6 +38,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "2adb463f-839e-46e5-9332-7100566dc975"
+      }
+    },
+    "owner": "sarsharses"
   }
 }

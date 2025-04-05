@@ -1,0 +1,27 @@
+name: EAS Build (Android)
+
+on:
+  push:
+    tags:
+      - 'v*'    # Triggers on tags like v0.1.0, v1.2.3, etc.
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout source
+        uses: actions/checkout@v3
+
+      - name: 🔧 Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🚀 Trigger EAS Build (Android)
+        run: eas build --platform android --profile preview --non-interactive
+        env:
+          EAS_ACCESS_TOKEN: ${{ secrets.EAS_ACCESS_TOKEN }}

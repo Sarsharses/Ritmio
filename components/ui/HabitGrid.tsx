@@ -3,6 +3,7 @@ import { View, ScrollView, Text, StyleSheet } from 'react-native';
 import GridHeader from './GridHeader';
 import GridCell from './GridCell';
 import { saveGridState, loadGridState } from '@/utils/storage';
+import Constants from "expo-constants";
 
 const habits = ['Meditate', 'Workout', 'Read', 'Write', 'Sleep early'];
 const STORAGE_KEY = 'habitGrid';
@@ -86,6 +87,9 @@ export default function HabitGrid() {
 
     return (
         <View style={styles.container}>
+            <Text style={styles.versionText}>
+                Ritmio v{Constants.expoConfig?.version}
+            </Text>
             <GridHeader habits={habits} />
             <ScrollView>
                 {sortedDates.map(date => (
@@ -129,4 +133,9 @@ const styles = StyleSheet.create({
         padding: 6,
         textAlign: 'center',
     },
+    versionText: {
+        fontSize: 10,
+        color: '#ccc',
+        textAlign: 'left',
+    }
 });
