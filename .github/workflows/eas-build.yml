@@ -36,16 +36,38 @@ jobs:
           EAS_ACCESS_TOKEN: ${{ secrets.EAS_ACCESS_TOKEN }}
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: 🧠 Fetch latest build info
+      - name: 🧠 Wait for latest APK and fetch URL
         id: fetch-build
         run: |
-          LATEST_BUILD_URL=$(curl -s -H "Authorization: Bearer $EAS_ACCESS_TOKEN" \
-            -X POST https://api.expo.dev/graphql \
-            -H "Content-Type: application/json" \
-            --data '{"query":"{ builds(limit: 1, platform: ANDROID) { id, platform, status, artifacts { buildUrl } } }"}' \
-          | jq -r '.data.builds[0].artifacts.buildUrl')
+          echo "⏳ Waiting for Android build to finish..."
           
-          echo "APK_URL=$LATEST_BUILD_URL" >> "$GITHUB_OUTPUT"
+          for i in {1..30}; do
+            BUILD_INFO=$(curl -s -H "Authorization: Bearer $EAS_ACCESS_TOKEN" \
+              -X POST https://api.expo.dev/graphql \
+              -H "Content-Type: application/json" \
+              --data '{"query":"{ builds(limit: 1, platform: ANDROID) { id, status, artifacts { buildUrl } } }"}')
+          
+            BUILD_URL=$(echo "$BUILD_INFO" | jq -r '.data.builds[0].artifacts.buildUrl')
+            BUILD_STATUS=$(echo "$BUILD_INFO" | jq -r '.data.builds[0].status')
+          
+            echo "Attempt $i: status=$BUILD_STATUS, url=${BUILD_URL:-not ready}"
+          
+            if [[ "$BUILD_URL" != "null" && "$BUILD_URL" != "" ]]; then
+              echo "✅ APK is ready: $BUILD_URL"
+              echo "APK_URL=$BUILD_URL" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          
+            if [[ "$BUILD_STATUS" == "errored" ]]; then
+              echo "❌ Build failed on Expo backend."
+              exit 1
+            fi
+          
+            sleep 10
+          done
+          
+          echo "❌ Timeout: APK URL not available after waiting."
+          exit 1
         env:
           EAS_ACCESS_TOKEN: ${{ secrets.EAS_ACCESS_TOKEN }}
 
@@ -53,6 +75,14 @@ jobs:
         run: |
           TAG_NAME=${GITHUB_REF##*/}
           curl -o ritmio-$TAG_NAME.apk "${{ steps.fetch-build.outputs.APK_URL }}"
+
+      - name: 🧠 Get previous tag
+        id: previous-tag
+        run: |
+          git fetch --tags
+          PREV_TAG=$(git tag --sort=-creatordate | grep -v "${{ github.ref_name }}" | head -n 1)
+          echo "Previous tag: $PREV_TAG"
+          echo "previous_tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
 
       - name: 🚀 Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -62,6 +92,6 @@ jobs:
           files: ritmio-${{ github.ref_name }}.apk
           body: |
             Built from tag ${{ github.ref_name }}
-            See the full changelog at https://github.com/your-org/ritmio/compare/v0.1.1...v0.1.2
+            See the changelog: https://github.com/${{ github.repository }}/compare/${{ steps.previous-tag.outputs.previous_tag }}...${{ github.ref_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
