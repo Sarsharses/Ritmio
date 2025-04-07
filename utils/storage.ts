@@ -1,5 +1,41 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+export type Habit = {
+    id: string;
+    name: string;
+};
+
+export type GridState = {
+    [date: string]: {
+        [habitId: string]: boolean;
+    };
+};
+
+export type AppState = {
+    habits: Habit[];
+    grid: GridState;
+};
+
+const STORAGE_KEY = 'appState';
+
+export const loadAppState = async (): Promise<AppState | null> => {
+    try {
+        const json = await AsyncStorage.getItem(STORAGE_KEY);
+        return json ? JSON.parse(json) : null;
+    } catch (e) {
+        console.error('Failed to load app state', e);
+        return null;
+    }
+};
+
+export const saveAppState = async (state: AppState) => {
+    try {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+        console.error('Failed to save app state', e);
+    }
+};
+
 export async function saveGridState(key: string, data: { [date: string]: boolean[] }) {
     try {
         const json = JSON.stringify(data);

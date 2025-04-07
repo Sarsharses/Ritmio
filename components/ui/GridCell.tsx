@@ -18,8 +18,8 @@ export default function GridCell({done, onToggle}: Props) {
 
 const styles = StyleSheet.create({
     cell: {
-        flex: 1,
-        aspectRatio: 1,
+        width: 32,
+        height: 32,
         alignItems: 'center',
         justifyContent: 'center',
         borderRightWidth: 1,

@@ -25,6 +25,8 @@ const styles = StyleSheet.create({
         borderBottomColor: '#444',
         borderTopWidth: 1,
         borderTopColor: '#333',
+        borderRightWidth: 1,
+        borderRightColor: '#333',
         height: 125,
     },
     cornerCell: {
@@ -44,7 +46,7 @@ const styles = StyleSheet.create({
     },
     rotatedHeaderCell: {
         height: '100%',
-        flex: 1,
+        width: 32,
         alignItems: 'center',
         justifyContent: 'center',
         borderRightWidth: 1,

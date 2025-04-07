@@ -1,86 +1,59 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, ScrollView, Text, StyleSheet } from 'react-native';
+import { Habit, AppState, loadAppState, saveAppState } from '@/utils/storage';
 import GridHeader from './GridHeader';
 import GridCell from './GridCell';
-import { saveGridState, loadGridState } from '@/utils/storage';
+import { format } from 'date-fns';
 import Constants from "expo-constants";
 
-const habits = ['Meditate', 'Workout', 'Read', 'Write', 'Sleep early'];
-const STORAGE_KEY = 'habitGrid';
-
-type GridState = {
-    [date: string]: boolean[];
-};
+const today = format(new Date(), 'dd-MM');
 
 export default function HabitGrid() {
-    const [grid, setGrid] = useState<GridState | null>(null);
+    const [habits, setHabits] = useState<Habit[]>([]);
+    const [grid, setGrid] = useState<AppState['grid']>({});
     const [loading, setLoading] = useState(true);
 
+    useFocusEffect(
+        useCallback(() => {
+            (async () => {
+                const state = await loadAppState();
+                if (state) {
+                    setHabits(state.habits);
+                    setGrid(state.grid);
+                }
+                setLoading(false);
+            })();
+        }, [])
+    );
+
     useEffect(() => {
-        (async () => {
-            const saved = await loadGridState(STORAGE_KEY);
-            const today = getTodayKey();
-            const initial: GridState = saved && isValidState(saved) ? { ...saved } : {};
+        if (!loading) {
+            saveAppState({ habits, grid });
+        }
+    }, [habits, grid]);
 
-            // Add today if missing
-            if (!initial[today]) {
-                initial[today] = createEmptyRow();
-            }
 
-            setGrid(initial);
-            setLoading(false);
-        })();
-    }, []);
 
-    const createEmptyRow = () => Array(habits.length).fill(false);
-
-    const getTodayKey = () =>
-        new Date().toISOString().split('T')[0]; // 'YYYY-MM-DD'
-
-    const isValidState = (data: any): data is GridState => {
-        return (
-            typeof data === 'object' &&
-            Object.values(data).every(
-                row =>
-                    Array.isArray(row) &&
-                    row.length === habits.length &&
-                    row.every(cell => typeof cell === 'boolean')
-            )
-        );
-    };
-
-    const isDateEditable = (dateStr: string) => {
-        const today = new Date();
-        const date = new Date(dateStr);
-        const diff = (today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24);
-        return diff <= 1; // today or yesterday
-    };
-
-    const toggleCell = (date: string, habitIndex: number) => {
-        if (!grid) return;
-
-        const newGrid = { ...grid };
-        newGrid[date] = [...(newGrid[date] ?? createEmptyRow())];
-        newGrid[date][habitIndex] = !newGrid[date][habitIndex];
-
-        setGrid(newGrid);
-        saveGridState(STORAGE_KEY, newGrid);
-    };
-
-    const formatDisplayDate = (iso: string): string => {
-        const d = new Date(iso);
-        return d.toLocaleDateString('en-US', {
-            month: 'short',
-            day: '2-digit',
+    const toggleCell = (date: string, habitId: string) => {
+        setGrid(prev => {
+            const newDay = { ...(prev[date] ?? {}) };
+            newDay[habitId] = !newDay[habitId];
+            return { ...prev, [date]: newDay };
         });
     };
 
-    if (loading || !grid) {
+    if (loading) {
         return (
             <View style={{ padding: 20 }}>
                 <Text>🔄 Loading habit data...</Text>
             </View>
         );
+    }
+
+    const dates = Object.keys(grid).sort().reverse();
+    if (!dates.includes(today)) {
+        dates.unshift(today); // ensure today is always shown
     }
 
     const sortedDates = Object.keys(grid).sort().reverse();
@@ -90,16 +63,16 @@ export default function HabitGrid() {
             <Text style={styles.versionText}>
                 Ritmio v{Constants.expoConfig?.version}
             </Text>
-            <GridHeader habits={habits} />
+            <GridHeader habits={habits.map(h => h.name)} />
             <ScrollView>
-                {sortedDates.map(date => (
+                {dates.map(date => (
                     <View key={date} style={styles.row}>
-                        <Text style={styles.dayLabel}>{formatDisplayDate(date)}</Text>
-                        {grid[date].map((done, habitIndex) => (
+                        <Text style={styles.dayLabel}>{date}</Text>
+                        {habits.map(habit => (
                             <GridCell
-                                key={habitIndex}
-                                done={done}
-                                onToggle={() => isDateEditable(date) && toggleCell(date, habitIndex)}
+                                key={habit.id}
+                                done={grid[date]?.[habit.id] ?? false}
+                                onToggle={() => toggleCell(date, habit.id)}
                             />
                         ))}
                     </View>
@@ -121,6 +94,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         borderBottomWidth: 1,
         borderBottomColor: '#333',
+        borderRightWidth: 1,
+        borderRightColor: '#333',
     },
     dayLabel: {
         width: 60,
